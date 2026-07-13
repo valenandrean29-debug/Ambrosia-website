@@ -5,10 +5,6 @@ import { supabase } from "../supabase";
 export const searchProductsTool = tool(
   async ({ category, max_price, keyword }) => {
     console.log(`\n=> [System] Agent memanggil Supabase Database dengan filter:`, { category, max_price, keyword });
-    
-    if (!supabase) {
-      return "Error: Supabase client is not initialized. Please check your environment variables.";
-    }
 
     let query = supabase.from("products").select("*");
 

@@ -88,11 +88,6 @@ export default function ShowcaseSection({
 
   useEffect(() => {
     async function fetchProducts() {
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-
       try {
         let query = supabase
           .from("products")

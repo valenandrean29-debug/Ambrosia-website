@@ -107,7 +107,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     async function fetchProduct() {
-      if (!id || !supabase) return;
+      if (!id) return;
       try {
         const { data, error } = await supabase
           .from("products")
