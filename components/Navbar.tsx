@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import {
@@ -12,19 +12,43 @@ import {
   ChevronDown,
   Heart,
   ClipboardList,
+  Dumbbell,
+  Flame,
+  Zap,
+  ChevronRight,
 } from "lucide-react";
-import { CategoryGrid } from "./CategoryCards";
 
-const navLinks = [
-  { label: "Shop", href: "/" },
-  { label: "Category", href: "/category" },
-  { label: "About", href: "/about" },
+const categories = [
+  {
+    name: "Whey Protein",
+    icon: Dumbbell,
+    accent: "text-accent-blue",
+    badge: "Popular",
+    description: "Build & recover faster",
+    href: "#whey-protein",
+  },
+  {
+    name: "Gainer",
+    icon: Flame,
+    accent: "text-accent-green",
+    description: "Bulk up effectively",
+    href: "#gainer",
+  },
+  {
+    name: "Creatine",
+    icon: Zap,
+    accent: "text-amber-600",
+    description: "Boost your performance",
+    href: "#creatine",
+  },
 ];
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [cartCount, setCartCount] = useState(0);
+  const categoryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -69,6 +93,17 @@ export default function Navbar() {
     };
   }, [user]);
 
+  // Tutup dropdown jika klik di luar
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
+        setIsCategoryOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const getUserName = () => {
     if (!user) return "";
     if (user.user_metadata?.name) return user.user_metadata.name;
@@ -89,38 +124,72 @@ export default function Navbar() {
 
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center h-full gap-8">
-            {navLinks.map((link) => {
-              if (link.label === "Category") {
-                return (
-                  <div key={link.label} className="group h-full flex items-center">
-                    <Link
-                      href={link.href}
-                      className="text-sm font-medium text-secondary group-hover:text-foreground transition-colors duration-200 flex items-center gap-1 relative after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[1.5px] after:bg-foreground after:transition-all after:duration-300 group-hover:after:w-full"
-                    >
-                      {link.label}
-                      <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180" />
-                    </Link>
+            {/* Shop */}
+            <Link
+              href="/"
+              className="text-sm font-medium text-secondary hover:text-foreground transition-colors duration-200 relative after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[1.5px] after:bg-foreground after:transition-all after:duration-300 hover:after:w-full"
+            >
+              Shop
+            </Link>
 
-                    {/* Mega Menu Dropdown */}
-                    <div className="absolute top-full left-0 w-full bg-background/95 backdrop-blur-md border-b border-border-custom shadow-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top pt-6 pb-10">
-                      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-                        <CategoryGrid />
-                      </div>
-                    </div>
+            {/* Category — popup on click */}
+            <div ref={categoryRef} className="relative h-full flex items-center">
+              <button
+                onClick={() => setIsCategoryOpen((prev) => !prev)}
+                className="text-sm font-medium text-secondary hover:text-foreground transition-colors duration-200 flex items-center gap-1 relative after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[1.5px] after:bg-foreground after:transition-all after:duration-300 hover:after:w-full"
+              >
+                Category
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-300 ${isCategoryOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {/* Dropdown Popup */}
+              {isCategoryOpen && (
+                <div className="absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 w-72 bg-background border border-border-custom rounded-2xl shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {/* Arrow indicator */}
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-2 overflow-hidden">
+                    <div className="w-3 h-3 bg-background border-l border-t border-border-custom rotate-45 translate-y-1 mx-auto" />
                   </div>
-                );
-              }
 
-              return (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm font-medium text-secondary hover:text-foreground transition-colors duration-200 relative after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[1.5px] after:bg-foreground after:transition-all after:duration-300 hover:after:w-full"
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-secondary px-3 pt-2 pb-2">
+                    Pilih Kategori
+                  </p>
+
+                  <div className="flex flex-col gap-0.5">
+                    {categories.map((cat) => {
+                      const Icon = cat.icon;
+                      return (
+                        <a
+                          key={cat.name}
+                          href={cat.href}
+                          onClick={() => setIsCategoryOpen(false)}
+                          className="group flex items-center justify-between gap-3 px-3 py-3 rounded-xl hover:bg-surface transition-all duration-200"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-surface group-hover:bg-background flex items-center justify-center transition-colors">
+                              <Icon className={`w-4 h-4 ${cat.accent}`} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-foreground">{cat.name}</span>
+                                {cat.badge && (
+                                  <span className="text-[9px] font-semibold uppercase tracking-wider text-white bg-accent-green px-1.5 py-0.5 rounded-full">
+                                    {cat.badge}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-secondary">{cat.description}</p>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-secondary group-hover:text-foreground group-hover:translate-x-0.5 transition-all duration-200" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Actions */}
@@ -199,34 +268,50 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "max-h-[80vh] opacity-100 overflow-y-auto" : "max-h-0 opacity-0"
-          }`}
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          isMobileMenuOpen ? "max-h-[80vh] opacity-100 overflow-y-auto" : "max-h-0 opacity-0"
+        }`}
       >
         <div className="px-6 py-4 bg-background border-t border-border-custom space-y-1">
-          {navLinks.map((link) => {
-            if (link.label === "Category") {
-              return (
-                <div key={link.label} className="py-2 border-b border-border-custom/50 last:border-0">
-                  <div className="text-sm font-medium text-foreground px-4 py-2 flex items-center justify-between">
-                    <span>{link.label}</span>
-                  </div>
-                  <div className="pt-2 pb-4">
-                    <CategoryGrid />
-                  </div>
-                </div>
-              );
-            }
-            return (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="block px-4 py-3 text-sm font-medium text-secondary hover:text-foreground hover:bg-surface rounded-xl transition-all duration-200"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+          {/* Shop */}
+          <Link
+            href="/"
+            className="block px-4 py-3 text-sm font-medium text-secondary hover:text-foreground hover:bg-surface rounded-xl transition-all duration-200"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Shop
+          </Link>
+
+          {/* Category — expandable section on mobile */}
+          <div className="py-1">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-secondary px-4 pt-3 pb-2">
+              Category
+            </p>
+            <div className="flex flex-col gap-0.5">
+              {categories.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <a
+                    key={cat.name}
+                    href={cat.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-surface transition-all duration-200"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center">
+                      <Icon className={`w-4 h-4 ${cat.accent}`} />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">{cat.name}</span>
+                    {cat.badge && (
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-white bg-accent-green px-1.5 py-0.5 rounded-full">
+                        {cat.badge}
+                      </span>
+                    )}
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+
           {user ? (
             <div className="block px-4 py-3 text-sm font-medium text-foreground hover:bg-surface rounded-xl transition-all duration-200 sm:hidden truncate">
               Hi, {getUserName()}
